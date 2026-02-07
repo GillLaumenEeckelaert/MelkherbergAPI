@@ -3,6 +3,12 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
+# Melkherberg Specific Files
+./SQLQueries
+**/appsettings.Development.json
+**/bin
+
+
 # dotenv files
 .env
 
