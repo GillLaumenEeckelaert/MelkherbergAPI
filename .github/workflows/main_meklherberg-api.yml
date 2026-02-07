@@ -27,7 +27,7 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: Publish the app
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/melkherberg-api"
 
       - name: Verify the publish directory exists
         run: ls -R publish
@@ -36,7 +36,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dotnet-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          path: ${{env.DOTNET_ROOT}}/melkherberg-api
 
   deploy:
     runs-on: windows-latest
@@ -57,3 +57,4 @@ jobs:
           package: .
 
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E1BAEECFC54443B8AE30ABCC6A1690E3 }}
+
