@@ -5,12 +5,11 @@ using Framework.Handlers.Permissions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace Framework.Build;
 
@@ -21,10 +20,27 @@ public static class Builder
         )
     {
         // Add framework DB Context
-        builder.Services.AddDbContext<FrameworkDbContext>(options =>
+        /*builder.Services.AddDbContext<FrameworkDbContext>(options =>
         {
             options.UseNpgsql(
                 builder.Configuration.GetConnectionString("DefaultConnection"),
+                x => x.MigrationsAssembly(typeof(FrameworkDbContext).Assembly.FullName));
+        });*/
+        var connection = String.Empty;
+        if (builder.Environment.IsDevelopment())
+        {
+            builder.Configuration.AddEnvironmentVariables().AddJsonFile("appsettings.Development.json");
+            connection = builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING");
+        }
+        else
+        {
+            connection = Environment.GetEnvironmentVariable("AZURE_SQL_CONNECTIONSTRING");
+        }
+
+        builder.Services.AddDbContext<FrameworkDbContext>(options =>
+        {
+            options.UseSqlServer(
+                connection,
                 x => x.MigrationsAssembly(typeof(FrameworkDbContext).Assembly.FullName));
         });
         
@@ -80,7 +96,7 @@ public static class Builder
                 BearerFormat = "JWT",
                 Scheme = "Bearer"
             });
-            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            /*options.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
                 {
                     new OpenApiSecurityScheme
@@ -93,7 +109,7 @@ public static class Builder
                     },
                     []
                 }
-            });
+            });*/
         });
 
         builder.Services.AddCors(options =>
