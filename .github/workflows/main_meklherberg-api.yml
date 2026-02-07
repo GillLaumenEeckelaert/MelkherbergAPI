@@ -27,7 +27,7 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: Publish the app
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/melkherberg-api"
+        run: dotnet publish -c Release --property:PublishDir="${{env.DOTNET_ROOT}}/melkherberg-api"
 
       - name: Verify the publish directory exists
         run: ls -R publish
@@ -57,4 +57,5 @@ jobs:
           package: .
 
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_E1BAEECFC54443B8AE30ABCC6A1690E3 }}
+
 
