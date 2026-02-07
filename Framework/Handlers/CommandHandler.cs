@@ -1,81 +1,46 @@
-using AutoMapper;
-using Framework.Database;
-using Framework.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Framework.Handlers
 {
-    public abstract class QueryHandler<TRequest, TResponse> : ControllerBase
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public abstract class AuthenticatedCommandHandler<TRequest> : CommandHandler<TRequest> {}
+    
+    public abstract class CommandHandler<TRequest> : BaseHandler<TRequest>
     {
-        private IMapper? _mapper;
-        private FrameworkDbContext? _db;
-
-        protected IMapper Mapper => _mapper ??= HttpContext.RequestServices.GetRequiredService<IMapper>();
-        private FrameworkDbContext Db => _db ??= HttpContext.RequestServices.GetRequiredService<FrameworkDbContext>();
-
-        [HttpGet]
+        [HttpPost]
         [Tags("[controller]")]
-        [Produces("application/json")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<TResponse>> QueryExecute([FromQuery] TRequest parameters)
+        public async Task<ActionResult> CommandExecute([FromBody] TRequest parameters)
         {
-            var inboxMessageId = AddReceivedLog();
+            var inboxMessageId = await AddReceivedLog(parameters);
             
             ValidateInputParameters();
-            TResponse response = await Execute(parameters);
-            
-            FinishReceivedLog(inboxMessageId, response);
-            
-            return Ok(response);
-        }
 
-        protected abstract Task<TResponse> Execute(TRequest request);
-
-        private Guid AddReceivedLog()
-        {
-            var request = HttpContext.Request;
-            
-            var receivedLog = new InboxMessage
+            try
             {
-                Type = request.Path.HasValue ? request.Path.Value : "Unknown",
-                Content = request.QueryString.HasValue ? request.QueryString.Value : string.Empty,
-                Source = request.HttpContext.Connection.RemoteIpAddress?.ToString()
-            };
-            
-            var response = Db.InboxMessage.Add(receivedLog);
-            Db.SaveChanges();
-
-            return response.Entity.InboxMessageId;
-        }
-        
-        private void ValidateInputParameters()
-        {
-            string requestName = typeof(TRequest).ToString().Split('.').Last();
-            string className = requestName + "Validator";
-            Type? type = Type.GetType(className);
-            if (type is not null)
-            {
-                object? obj = Activator.CreateInstance(type);
+                await Execute(parameters);
             }
-        }
-
-        private void FinishReceivedLog(Guid inboxMessageId, TResponse? response)
-        {
-            var inboxMessage = Db.InboxMessage.FirstOrDefault(im => im.InboxMessageId == inboxMessageId);
-
-            if (inboxMessage is not null)
+            catch (BadHttpRequestException e)
             {
-                inboxMessage.Handled = DateTime.UtcNow;
-                inboxMessage.Success = response is not null;
-                
-                Db.InboxMessage.Update(inboxMessage);
+                await FinishReceivedLog(inboxMessageId, e, 400);
+                return Problem(statusCode: 400, detail: e.Message);
+            }
+            catch (Exception e)
+            {
+                await FinishReceivedLog(inboxMessageId, e, 500);
+                return Problem(statusCode: 500, detail: e.Message);
             }
             
-            Db.SaveChanges();
+            await FinishReceivedLog(inboxMessageId, null, 200);
+            
+            return Ok();
         }
+
+        protected abstract Task Execute(TRequest request);
     }
 }

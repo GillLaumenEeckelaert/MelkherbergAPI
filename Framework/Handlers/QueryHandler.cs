@@ -1,19 +1,15 @@
-using api.Database;
-using AutoMapper;
-using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace api.Framework.Handlers
+namespace Framework.Handlers
 {
-    public abstract class QueryHandler<TRequest, TResponse> : ControllerBase
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public abstract class AuthenticatedQueryHandler<TRequest, TResponse> : QueryHandler<TRequest, TResponse> {}
+    
+    public abstract class QueryHandler<TRequest, TResponse> : BaseHandler<TRequest>
     {
-        private ApplicationDBContext? _db;
-        private IMapper? _mapper;
-
-        protected IMapper Mapper => _mapper ??= HttpContext.RequestServices.GetRequiredService<IMapper>();
-        protected ApplicationDBContext Db => _db ??= HttpContext.RequestServices.GetRequiredService<ApplicationDBContext>();
-
         [HttpGet]
         [Tags("[controller]")]
         [Produces("application/json")]
@@ -22,26 +18,27 @@ namespace api.Framework.Handlers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<TResponse>> QueryExecute([FromQuery] TRequest parameters)
         {
+            var inboxMessageId = await AddReceivedLog(parameters);
+            
             ValidateInputParameters();
-            TResponse response = await Execute(parameters);
+
+            TResponse response;
+
+            try
+            {
+                response = await Execute(parameters);
+            }
+            catch (Exception e)
+            {
+                await FinishReceivedLog(inboxMessageId, e, 500);
+                return Problem(statusCode: 500, detail: e.Message);
+            }
+            
+            await FinishReceivedLog(inboxMessageId, null, 200);
+            
             return Ok(response);
         }
 
         protected abstract Task<TResponse> Execute(TRequest request);
-
-        private void ValidateInputParameters()
-        {
-            Console.WriteLine(typeof(TRequest).ToString());
-            string requestName = typeof(TRequest).ToString().Split('.').Last();
-            string className = requestName + "Validator";
-            Console.WriteLine(className);
-            Type? type = Type.GetType("api.Handlers.Logs.GetPublicLogValidator");
-            Console.WriteLine(type);
-            if (type is not null)
-            {
-                object? obj = Activator.CreateInstance(type);
-                Console.WriteLine(obj);
-            }
-        }
     }
 }

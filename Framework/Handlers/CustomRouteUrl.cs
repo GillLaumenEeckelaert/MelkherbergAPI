@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
+namespace Framework.Handlers;
+
 public class CustomRouteUrl : IApplicationModelConvention
 {
     public void Apply(ApplicationModel application)

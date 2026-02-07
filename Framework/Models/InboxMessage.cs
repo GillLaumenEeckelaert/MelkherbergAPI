@@ -1,12 +1,10 @@
-using Framework.Models;
-
-namespace Models.Logs;
+namespace Framework.Models;
 
 public class InboxMessage : BaseModel
 {
     public Guid InboxMessageId { get; set; }
 
-    public DateTime Received { get; set; } = DateTime.Now;
+    public DateTime Received { get; set; } = DateTime.UtcNow;
     public DateTime? Handled { get; set; }
 
     public string Type { get; set; } = null!;

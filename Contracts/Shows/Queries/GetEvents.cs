@@ -1,8 +1,15 @@
+using Contracts.Shows.Shared;
 using Framework.Attributes;
 
-namespace Contracts.Test.Queries;
+namespace Contracts.Shows.Queries;
 
 [Authenticate]
-public class GetAuthenticatedTestObjects
+public class GetEvents
 {
+    public List<Guid> PersonIds { get; set; } = [];
+}
+
+public class GetEventsResponse
+{
+    public List<EventSummaryDto> Events { get; set; } = [];
 }

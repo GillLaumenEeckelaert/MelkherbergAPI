@@ -1,7 +1,8 @@
 namespace Framework.Contracts.Permissions.Shared;
 
-public class PermissionDto
+public class UserPermissionDto
 {
+    public Guid? UserPermissionId { get; set; }
     public Guid PermissionId { get; set; }
 
     public string PermissionCode { get; set; } = null!;

@@ -1,27 +1,30 @@
 using Contracts.Shows.Commands;
+using Contracts.Users.Commands;
 using Database;
 using Framework.Handlers;
-using Models.Shows;
+using Models.General;
 
-namespace Handlers.Shows;
+namespace Handlers.Users;
 
-public class CreateShowHandler(ApplicationDbContext db) : CommandHandler<CreateShow>
+public class CreatePersonHandler(ApplicationDbContext db) : CommandHandler<CreatePerson>
 {
-    protected override async Task Execute(CreateShow request)
+    protected override async Task Execute(CreatePerson request)
     {
-        var existingShow = db.Show.FirstOrDefault(s => string.Equals(s.Name, request.Show.Name));
+        var existingPerson = db.Person.FirstOrDefault(s => string.Equals(s.FirstName, request.Person.FirstName) && string.Equals(s.LastName, request.Person.LastName));
 
-        if (existingShow != null)
+        if (existingPerson != null)
         {
-            throw new Exception($"Show with name {request.Show.Name} already exists");
+            throw new Exception($"Person with name {request.Person.FirstName} {request.Person.LastName} already exists");
         }
 
-        await db.Show.AddAsync(new Show
+        await db.Person.AddAsync(new Person
         {
-            ShowId = Guid.NewGuid(),
-            Name = request.Show.Name,
-            Description = request.Show.Description,
-            ShowType = request.Show.ShowType,
+            FirstName = request.Person.FirstName ?? string.Empty,
+            LastName = request.Person.LastName,
+            NickName = request.Person.NickName,
+            Birthday = request.Person.BirthDate is not null ? new DateOnly(request.Person.BirthDate.Value.Year, request.Person.BirthDate.Value.Month,request.Person.BirthDate.Value.Day) : null,
+            IsSelectable =  request.Person.IsSelectable,
+            UserId = request.Person.UserId
         });
         await db.SaveChangesAsync();
     }

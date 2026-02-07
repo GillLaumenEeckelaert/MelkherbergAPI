@@ -1,6 +1,8 @@
 namespace Framework.Attributes;
 
-public class AuthenticateAttribute
+[System.AttributeUsage(System.AttributeTargets.Class)
+]
+public class AuthenticateAttribute : System.Attribute
 {
-    
+    public AuthenticateAttribute() { }
 }

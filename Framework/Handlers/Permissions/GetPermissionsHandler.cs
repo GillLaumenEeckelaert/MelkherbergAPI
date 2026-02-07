@@ -1,30 +1,18 @@
-using Contracts.Shows.Queries;
-using Contracts.Shows.Shared;
-using Database;
-using Framework.Handlers;
+using Framework.Contracts.Permissions.Queries;
+using Framework.Contracts.Permissions.Shared;
+using Framework.Database;
 using Microsoft.EntityFrameworkCore;
-using Models.Shows;
 
-namespace Handlers.Shows;
+namespace Framework.Handlers.Permissions;
 
-public class GetEventsHandler(ApplicationDbContext db) : AuthenticatedQueryHandler<GetEvents, GetEventsResponse>
+public class GetPermissionsHandler(FrameworkDbContext db) : QueryHandler<GetPermissions, GetPermissionsResponse>
 {
-    protected override async Task<GetEventsResponse> Execute(GetEvents request)
+    protected override async Task<GetPermissionsResponse> Execute(GetPermissions request)
     {
-        Console.WriteLine("Get Events");
-        var events = db.Event.Where(e => e.EventId != Guid.Empty);
+        var permissions = db.Permission;
 
-        var eventDtos = await (Mapper.ProjectTo<EventSummaryDto>(events)).ToListAsync();
+        var permissionDtos = await (Mapper.ProjectTo<PermissionDto>(permissions)).ToListAsync();
 
-        foreach (var eventDto in eventDtos)
-        {
-            if (eventDto.LocationId is not null && eventDto.LocationId != Guid.Empty)
-            {
-                var location = await db.Location.FirstOrDefaultAsync(l => l.LocationId == eventDto.LocationId && (l.ValidFrom == null || l.ValidFrom <= DateOnly.FromDateTime(DateTime.Today)) && (l.ValidTo == null || l.ValidTo >= DateOnly.FromDateTime(DateTime.Today)));
-                eventDto.LocationName = location?.Name;
-            }
-        }
-
-        return new GetEventsResponse() { Events = eventDtos };
+        return new GetPermissionsResponse() { Permissions = permissionDtos };
     }
 }

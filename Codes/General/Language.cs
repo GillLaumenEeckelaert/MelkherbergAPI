@@ -1,6 +1,9 @@
 namespace Codes.General;
 
-public class Language
+public enum Language
 {
-    
+    En,
+    Fr,
+    De,
+    Nl
 }

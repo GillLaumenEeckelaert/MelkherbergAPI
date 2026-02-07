@@ -1,10 +1,9 @@
-namespace Codes.Test;
+namespace Codes.Location;
 
-public enum TestType
+public enum LocationType
 {
-    Alpha,
-    Beta,
-    Gamma,
-    Delta,
-    Epsilon
+    Arena,
+    Terrain,
+    Theatre,
+    Venue
 }
