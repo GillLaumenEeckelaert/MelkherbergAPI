@@ -6,6 +6,7 @@
 # Melkherberg Specific Files
 ./SQLQueries
 **/appsettings.Development.json
+**/Properties
 
 # Resharper files
 */**/bin/Debug
