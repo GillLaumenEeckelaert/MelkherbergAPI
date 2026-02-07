@@ -14,7 +14,7 @@ builder.Services.AddMvc()
     .AddApplicationPart(typeof(GetEventsHandler).Assembly);
 
 var connection = String.Empty;
-if (builder.Environment.IsDevelopment())
+if (builder.Environment.IsDevelopment() && File.Exists("appsettings.Development.json"))
 {
     builder.Configuration.AddEnvironmentVariables().AddJsonFile("appsettings.Development.json");
     connection = builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING");
@@ -30,13 +30,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         connection,
         x => x.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
 });
-
-/*builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        x => x.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
-});*/
 
 builder.Services.AddAutoMapper(cfg => { }, typeof(GetEventsHandler));
 

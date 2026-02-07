@@ -20,14 +20,8 @@ public static class Builder
         )
     {
         // Add framework DB Context
-        /*builder.Services.AddDbContext<FrameworkDbContext>(options =>
-        {
-            options.UseNpgsql(
-                builder.Configuration.GetConnectionString("DefaultConnection"),
-                x => x.MigrationsAssembly(typeof(FrameworkDbContext).Assembly.FullName));
-        });*/
         var connection = String.Empty;
-        if (builder.Environment.IsDevelopment())
+        if (builder.Environment.IsDevelopment() && File.Exists("appsettings.Development.json"))
         {
             builder.Configuration.AddEnvironmentVariables().AddJsonFile("appsettings.Development.json");
             connection = builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING");
