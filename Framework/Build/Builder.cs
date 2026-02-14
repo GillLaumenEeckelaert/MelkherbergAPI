@@ -1,3 +1,4 @@
+using System.Reflection;
 using Framework.Database;
 using Framework.Extensions;
 using Framework.Handlers;
@@ -21,9 +22,11 @@ public static class Builder
     {
         // Add framework DB Context
         var connection = String.Empty;
-        if (builder.Environment.IsDevelopment() && File.Exists("appsettings.Development.json"))
+        var basePath = Directory.GetParent(Environment.CurrentDirectory)?.Parent?.Parent?.FullName;
+        
+        if (builder.Environment.IsDevelopment() && File.Exists($"{basePath}/appsettings.Development.json"))
         {
-            builder.Configuration.AddEnvironmentVariables().AddJsonFile("appsettings.Development.json");
+            builder.Configuration.AddEnvironmentVariables().AddJsonFile($"{basePath}/appsettings.Development.json");
             connection = builder.Configuration.GetConnectionString("AZURE_SQL_CONNECTIONSTRING");
         }
         else
